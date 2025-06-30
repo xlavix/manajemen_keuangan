@@ -66,6 +66,44 @@ Aplikasi Manajemen Keuangan adalah aplikasi berbasis Flutter yang dirancang untu
 
 ---
 
+##  Struktur Proyek
+lib/
+├── main.dart
+├── login_page.dart
+├── register_page.dart
+├── home_page.dart
+├── add_transaction_page.dart
+├── account_page.dart
+├── notification_page.dart
+├── transaction_model.dart
+
+##  Penjelasan File Utama
+- main.dart
+Titik masuk aplikasi. File ini menginisialisasi aplikasi dan menjalankan widget utama.
+
+- login_page.dart
+Mendefinisikan tampilan dan fungsi login untuk pengguna.
+
+- register_page.dart
+Mendefinisikan tampilan dan fungsi registrasi akun baru.
+
+- home_page.dart
+Menampilkan ringkasan saldo, pemasukan, pengeluaran, dan daftar transaksi terakhir.
+
+- add_transaction_page.dart
+Mendefinisikan halaman untuk menambah transaksi baru (pemasukan atau pengeluaran).
+
+- account_page.dart
+Mendefinisikan halaman profil pengguna, termasuk fitur ubah password, logout, hapus akun, dan dark mode.
+
+- notification_page.dart
+Menampilkan daftar notifikasi yang diterima oleh pengguna.
+
+- transaction_model.dart
+Berisi model data transaksi yang digunakan dalam aplikasi.
+
+---
+
 ##  Teknologi
 
 - Flutter
