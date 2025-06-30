@@ -1,16 +1,83 @@
-# uas_pbm
+# UAS PBM - Aplikasi Manajemen Keuangan
+Nama Kelompok :
+- Jimly Asidiq Anwar (4522210018)
+- Muhamad Farhan (4522210057)
+- Rizky Galih Dwiyanto (4522210074)
 
-A new Flutter project.
 
-## Getting Started
+# Manajemen Keuangan App
 
-This project is a starting point for a Flutter application.
+Aplikasi Manajemen Keuangan adalah aplikasi berbasis Flutter yang dirancang untuk membantu pengguna mencatat dan memantau pemasukan serta pengeluaran mereka. Dengan tampilan yang modern dan fitur yang sederhana, aplikasi ini cocok digunakan oleh siapa saja yang ingin mengelola keuangan pribadi dengan lebih baik.
 
-A few resources to get you started if this is your first Flutter project:
+---
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## Tampilan Aplikasi
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### Login
+
+![foto 1](https://github.com/user-attachments/assets/5671fc6c-c86b-4fcf-890c-e5265ccdbabc)
+
+
+---
+
+### Register
+
+![foto 2](https://github.com/user-attachments/assets/10b22f9f-31d3-4cf7-9921-9bec0621a5e0)
+
+
+---
+
+### Beranda
+
+![foto 6](https://github.com/user-attachments/assets/c2bbc732-cab2-4b66-811c-c50c276998c6)
+
+
+---
+
+### Tambah Transaksi
+
+![foto 4](https://github.com/user-attachments/assets/57c8eed7-5de0-4fd8-bbf6-a39c8acbf6fa)
+
+
+---
+
+### Notifikasi
+
+![foto 3](https://github.com/user-attachments/assets/83f7474c-4086-4889-9a49-7846290e88b3)
+
+
+---
+
+### Akun
+
+![foto 5](https://github.com/user-attachments/assets/c1e196e3-231d-4746-a17b-ad6a30739259)
+
+
+---
+
+##  Fitur Utama
+
+- **Autentikasi Pengguna**: Fitur login dan register agar data transaksi tersimpan per pengguna.
+- **Dashboard Beranda**: Menampilkan ringkasan saldo, total pemasukan, dan total pengeluaran.
+- **Tambah Transaksi**: Memungkinkan pengguna menambahkan transaksi pemasukan atau pengeluaran dengan detail nominal dan deskripsi.
+- **Daftar Transaksi Terbaru**: Mempermudah memantau riwayat transaksi.
+- **Mode Gelap (Dark Mode)**: Pengguna dapat beralih ke tema gelap sesuai preferensi.
+- **Manajemen Akun**: Fitur ubah password, logout, dan hapus akun.
+
+---
+
+##  Teknologi
+
+- Flutter
+- Dart
+
+---
+
+##  Cara Menjalankan
+1. Pastikan Flutter sudah terpasang.
+2. Clone repositori ini.
+3. Jalankan perintah berikut di terminal:
+
+```bash
+flutter pub get
+flutter run
