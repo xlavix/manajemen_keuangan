@@ -78,7 +78,7 @@ lib/
 ├── transaction_model.dart
 
 ##  Penjelasan File Utama
-- main.dart
+* 'main.dart'
 Titik masuk aplikasi. File ini menginisialisasi aplikasi dan menjalankan widget utama.
 
 - login_page.dart
