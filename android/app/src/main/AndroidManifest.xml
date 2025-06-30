@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="manajemen"
+        android:label="uas_pbm"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

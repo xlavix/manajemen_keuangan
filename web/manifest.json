@@ -1,6 +1,6 @@
 {
-    "name": "manajemen",
-    "short_name": "manajemen",
+    "name": "uas_pbm",
+    "short_name": "uas_pbm",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

@@ -1,107 +1,52 @@
 import 'package:flutter/material.dart';
-import 'dbhelper.dart';
-import 'finance_form_page.dart';
+import 'screens/login_page.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 void main() {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+
+  // Gunakan GlobalKey agar dapat mengakses state dari luar
+  static _MyAppState? of(BuildContext context) =>
+      context.findAncestorStateOfType<_MyAppState>();
+}
+
+class _MyAppState extends State<MyApp> {
+  ThemeMode _themeMode = ThemeMode.light;
+
+  void toggleTheme(bool isDark) {
+    setState(() {
+      _themeMode = isDark ? ThemeMode.dark : ThemeMode.light;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Aplikasi Keuangan',
+      title: 'Manajemen Keuangan',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        //textTheme: GoogleFonts.poppinsTextTheme(),
+        brightness: Brightness.light,
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
       ),
-      home: const MainPage(), // Langsung arahkan ke MainPage
-    );
-  }
-}
-
-class MainPage extends StatefulWidget {
-  const MainPage({super.key});
-
-  @override
-  _MainPageState createState() => _MainPageState();
-}
-
-class _MainPageState extends State<MainPage> {
-  final dbHelper _dbHelper = dbHelper.instance;
-  List<Map<String, dynamic>> _finances = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _refreshFinances();
-  }
-
-  Future<void> _refreshFinances() async {
-    final data = await _dbHelper.getFinances();
-    setState(() {
-      _finances = data;
-    });
-  }
-
-  Future<void> _navigateToAddFinance() async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const FinanceFormPage()),
-    );
-    if (result == true) {
-      _refreshFinances();
-    }
-  }
-
-  Future<void> _navigateToEditFinance(Map<String, dynamic> finance) async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => FinanceFormPage(finance: finance)),
-    );
-    if (result == true) {
-      _refreshFinances();
-    }
-  }
-
-  void _deleteFinance(int id) async {
-    await _dbHelper.deleteFinance(id);
-    _refreshFinances();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Daftar Keuangan'),
+      darkTheme: ThemeData(
+        brightness: Brightness.dark,
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.blue,
+          brightness: Brightness.dark,
+        ),
       ),
-      body: ListView.builder(
-        itemCount: _finances.length,
-        itemBuilder: (context, index) {
-          return ListTile(
-            title: Text(_finances[index]['type']),
-            subtitle: Text(_finances[index]['description']),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.edit),
-                  onPressed: () => _navigateToEditFinance(_finances[index]),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete),
-                  onPressed: () => _deleteFinance(_finances[index]['id']),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _navigateToAddFinance,
-        child: const Icon(Icons.add),
-      ),
+      themeMode: _themeMode,
+      home: const LoginPage(),
     );
   }
 }
