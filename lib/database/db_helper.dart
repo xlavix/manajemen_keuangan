@@ -40,7 +40,8 @@ class DBHelper {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         type TEXT,
         nominal TEXT,
-        description TEXT
+        description TEXT,
+        date TEXT
       );
     ''');
   }
@@ -105,7 +106,7 @@ class DBHelper {
     return await db.query('finance');
   }
 
-  // ✅ Tambahan: Hapus akun
+  // Tambahan: Hapus akun
   Future<int> deleteUserByUsername(String username) async {
     final db = await database;
     return await db.delete(

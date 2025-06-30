@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../database/db_helper.dart';
 
 class FinanceFormPage extends StatefulWidget {
@@ -13,6 +14,7 @@ class FinanceFormPage extends StatefulWidget {
 class _FinanceFormPageState extends State<FinanceFormPage> {
   final TextEditingController _nominalController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
+  DateTime _selectedDate = DateTime.now();
   String _type = 'income';
 
   final DBHelper _dbHelper = DBHelper();
@@ -24,6 +26,21 @@ class _FinanceFormPageState extends State<FinanceFormPage> {
       _type = widget.finance!['type'];
       _nominalController.text = widget.finance!['nominal'];
       _descriptionController.text = widget.finance!['description'];
+      _selectedDate = DateTime.tryParse(widget.finance!['date'] ?? '') ?? DateTime.now();
+    }
+  }
+
+  void _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (picked != null) {
+      setState(() {
+        _selectedDate = picked;
+      });
     }
   }
 
@@ -38,7 +55,8 @@ class _FinanceFormPageState extends State<FinanceFormPage> {
     final finance = {
       'type': _type,
       'nominal': _nominalController.text,
-      'description': _descriptionController.text
+      'description': _descriptionController.text,
+      'date': _selectedDate.toIso8601String().split('T').first,
     };
 
     if (widget.finance == null) {
@@ -73,6 +91,7 @@ class _FinanceFormPageState extends State<FinanceFormPage> {
   @override
   Widget build(BuildContext context) {
     final isEdit = widget.finance != null;
+    final dateFormatted = DateFormat('dd MMMM yyyy').format(_selectedDate);
 
     return Scaffold(
       backgroundColor: Colors.blue.shade50,
@@ -182,6 +201,28 @@ class _FinanceFormPageState extends State<FinanceFormPage> {
                 ),
               ),
             ),
+            const SizedBox(height: 20),
+
+            // Date input
+            GestureDetector(
+              onTap: _pickDate,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [BoxShadow(color: Colors.grey.shade300, blurRadius: 8)],
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.calendar_today_outlined),
+                    const SizedBox(width: 12),
+                    Text(dateFormatted, style: const TextStyle(fontSize: 16)),
+                  ],
+                ),
+              ),
+            ),
+
             const SizedBox(height: 30),
 
             // Tombol simpan
