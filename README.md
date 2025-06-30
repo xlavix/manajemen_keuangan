@@ -15,43 +15,52 @@ Aplikasi Manajemen Keuangan adalah aplikasi berbasis Flutter yang dirancang untu
 
 ### Login
 
-![foto 1](https://github.com/user-attachments/assets/5671fc6c-c86b-4fcf-890c-e5265ccdbabc)
+<img src="https://github.com/user-attachments/assets/5671fc6c-c86b-4fcf-890c-e5265ccdbabc" width="300">
+
 
 
 ---
 
 ### Register
 
-![foto 2](https://github.com/user-attachments/assets/10b22f9f-31d3-4cf7-9921-9bec0621a5e0)
+<img src="https://github.com/user-attachments/assets/10b22f9f-31d3-4cf7-9921-9bec0621a5e0" width="300">
 
 
 ---
 
 ### Beranda
 
-![foto 6](https://github.com/user-attachments/assets/c2bbc732-cab2-4b66-811c-c50c276998c6)
+<img src="https://github.com/user-attachments/assets/b6d2e05f-9903-4d6f-8430-f64448632e2d" width="300">
+
 
 
 ---
 
 ### Tambah Transaksi
 
-![foto 4](https://github.com/user-attachments/assets/57c8eed7-5de0-4fd8-bbf6-a39c8acbf6fa)
+<img src="https://github.com/user-attachments/assets/ee519240-260d-49c0-82f6-0891127ae642" width="300">
+
 
 
 ---
 
 ### Notifikasi
 
-![foto 3](https://github.com/user-attachments/assets/83f7474c-4086-4889-9a49-7846290e88b3)
+<img src="https://github.com/user-attachments/assets/83f7474c-4086-4889-9a49-7846290e88b3" width="300">
 
 
 ---
 
 ### Akun
 
-![foto 5](https://github.com/user-attachments/assets/c1e196e3-231d-4746-a17b-ad6a30739259)
+<img src="https://github.com/user-attachments/assets/8efee299-ac1e-4410-8a50-37f987c28367" width="300">
 
+
+---
+
+### Tablet mode
+
+<img src="https://github.com/user-attachments/assets/bd09fd46-af41-496d-8f6c-f5a9283093cd" width="600">
 
 ---
 
@@ -69,14 +78,20 @@ Aplikasi Manajemen Keuangan adalah aplikasi berbasis Flutter yang dirancang untu
 ##  Struktur Proyek
 ```
 lib/
-├── main.dart
-├── login_page.dart
-├── register_page.dart
-├── home_page.dart
-├── add_transaction_page.dart
-├── account_page.dart
-├── notification_page.dart
-├── transaction_model.dart
+├── database/
+│   └── db_helper.dart
+├── models/
+│   └── user_model.dart
+├── screens/
+│   ├── add_transaction_screen.dart
+│   ├── finance_form_page.dart
+│   ├── homepage.dart
+│   ├── login_page.dart
+│   ├── notifications_page.dart
+│   ├── profile_page.dart
+│   └── register_page.dart
+└── main.dart
+
 ```
 
 ##  Penjelasan File Utama
