@@ -67,6 +67,7 @@ Aplikasi Manajemen Keuangan adalah aplikasi berbasis Flutter yang dirancang untu
 ---
 
 ##  Struktur Proyek
+```
 lib/
 ├── main.dart
 ├── login_page.dart
@@ -76,6 +77,7 @@ lib/
 ├── account_page.dart
 ├── notification_page.dart
 ├── transaction_model.dart
+```
 
 ##  Penjelasan File Utama
 * `main.dart`
