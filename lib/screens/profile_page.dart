@@ -164,7 +164,7 @@ class _ProfilePageState extends State<ProfilePage> {
               title: "Ubah Password",
               onTap: () {},
             ),
-            _buildOption(
+            /*_buildOption(
               icon: Icons.dark_mode_outlined,
               title: "Dark Mode",
               trailing: Switch.adaptive(
@@ -174,7 +174,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 },
               ),
               onTap: () {},
-            ),
+            ),*/
             _buildOption(
               icon: Icons.logout,
               title: "Logout",
