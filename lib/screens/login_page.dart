@@ -41,23 +41,81 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
     final password = passwordController.text;
 
     if (username.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Form tidak boleh kosong")),
-      );
+      _showErrorDialog("Form tidak boleh kosong");
       return;
     }
 
     final user = await dbHelper.loginUser(username, password);
     if (user != null) {
+      _showSuccessDialog(user.username);
+    } else {
+      _showErrorDialog("Username atau password salah");
+    }
+  }
+
+  void _showSuccessDialog(String username) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              Icon(Icons.check_circle, color: Colors.green, size: 64),
+              SizedBox(height: 16),
+              Text(
+                'Berhasil login!',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    Future.delayed(const Duration(seconds: 1), () {
+      Navigator.pop(context); // Tutup dialog
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => HomePage(username: user.username)),
+        MaterialPageRoute(builder: (_) => HomePage(username: username)),
       );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Username atau password salah")),
-      );
-    }
+    });
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (_) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.cancel, color: Colors.red, size: 64),
+              const SizedBox(height: 16),
+              const Text(
+                'Gagal login',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 14),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    Future.delayed(const Duration(seconds: 1), () {
+      Navigator.pop(context); // Tutup dialog
+    });
   }
 
   @override

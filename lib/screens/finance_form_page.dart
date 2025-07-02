@@ -66,7 +66,48 @@ class _FinanceFormPageState extends State<FinanceFormPage> {
       await _dbHelper.updateFinance(finance);
     }
 
-    Navigator.pop(context, true);
+    _showSuccessDialog(isEdit: widget.finance != null);
+  }
+
+  void _showSuccessDialog({required bool isEdit}) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.check_circle, color: Colors.green, size: 64),
+              const SizedBox(height: 16),
+              Text(
+                isEdit ? 'Transaksi berhasil diperbarui' : 'Transaksi berhasil ditambahkan',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context); // tutup dialog
+                  Navigator.pop(context, true); // kembali ke halaman sebelumnya
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: const Text("Selesai"),
+              )
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   void _deleteFinance() async {
@@ -119,7 +160,7 @@ class _FinanceFormPageState extends State<FinanceFormPage> {
             ),
             const SizedBox(height: 20),
 
-            // Chip selector: income/expense
+            // Type Selector
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
               decoration: BoxDecoration(
@@ -154,7 +195,7 @@ class _FinanceFormPageState extends State<FinanceFormPage> {
             ),
             const SizedBox(height: 20),
 
-            // Nominal input
+            // Nominal
             TextField(
               controller: _nominalController,
               keyboardType: TextInputType.number,
@@ -182,7 +223,7 @@ class _FinanceFormPageState extends State<FinanceFormPage> {
             ),
             const SizedBox(height: 20),
 
-            // Description input
+            // Deskripsi
             TextField(
               controller: _descriptionController,
               decoration: InputDecoration(
@@ -203,7 +244,7 @@ class _FinanceFormPageState extends State<FinanceFormPage> {
             ),
             const SizedBox(height: 20),
 
-            // Date input
+            // Tanggal
             GestureDetector(
               onTap: _pickDate,
               child: Container(
@@ -225,7 +266,7 @@ class _FinanceFormPageState extends State<FinanceFormPage> {
 
             const SizedBox(height: 30),
 
-            // Tombol simpan
+            // Tombol Simpan
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(

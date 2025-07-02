@@ -40,28 +40,86 @@ class _RegisterPageState extends State<RegisterPage> with SingleTickerProviderSt
     final password = passwordController.text;
 
     if (username.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Form tidak boleh kosong")),
-      );
+      _showErrorDialog("Form tidak boleh kosong");
       return;
     }
 
     try {
       await dbHelper.registerUser(User(username: username, password: password));
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Registrasi berhasil! Silakan login.")),
-      );
+      _showSuccessDialog();
+    } catch (e) {
+      _showErrorDialog("Username sudah digunakan!");
+    }
+  }
 
-      // ✅ Redirect ke LoginPage setelah berhasil
+  void _showSuccessDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              Icon(Icons.check_circle, color: Colors.green, size: 64),
+              SizedBox(height: 16),
+              Text(
+                'Registrasi berhasil!',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Silakan login dengan akun Anda.',
+                style: TextStyle(fontSize: 14),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    Future.delayed(const Duration(seconds: 2), () {
+      Navigator.pop(context); // Tutup dialog
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const LoginPage()),
       );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Username sudah digunakan!")),
-      );
-    }
+    });
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (_) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.cancel, color: Colors.red, size: 64),
+              const SizedBox(height: 16),
+              const Text(
+                'Gagal registrasi',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 14),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    Future.delayed(const Duration(seconds: 1), () {
+      Navigator.pop(context); // Tutup dialog
+    });
   }
 
   @override

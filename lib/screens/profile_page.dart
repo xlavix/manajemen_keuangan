@@ -1,6 +1,10 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:uas_pbm/database/db_helper.dart';
-import 'package:uas_pbm/screens/login_page.dart';
+import '../database/db_helper.dart';
+import '../models/user_model.dart';
+import '../screens/login_page.dart';
+import 'edit_profile_page.dart';
+import 'connection_page.dart'; // <-- Tambahkan import ini
 
 class ProfilePage extends StatefulWidget {
   final String username;
@@ -18,6 +22,23 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   bool isDarkMode = false;
+  Uint8List? _photoBytes;
+  final DBHelper _dbHelper = DBHelper();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserImage();
+  }
+
+  Future<void> _loadUserImage() async {
+    final user = await _dbHelper.getUserByUsername(widget.username);
+    if (user != null && user.photo != null) {
+      setState(() {
+        _photoBytes = user.photo;
+      });
+    }
+  }
 
   void _confirmDeleteAccount(BuildContext context) {
     showDialog(
@@ -26,16 +47,12 @@ class _ProfilePageState extends State<ProfilePage> {
         title: const Text("Hapus Akun"),
         content: const Text("Apakah Anda yakin ingin menghapus akun ini secara permanen?"),
         actions: [
-          TextButton(
-            child: const Text("Batal"),
-            onPressed: () => Navigator.pop(context),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Batal")),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             child: const Text("Hapus Akun"),
             onPressed: () async {
-              final db = DBHelper();
-              await db.deleteUserByUsername(widget.username);
+              await _dbHelper.deleteUserByUsername(widget.username);
               Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(builder: (_) => const LoginPage()),
@@ -55,10 +72,7 @@ class _ProfilePageState extends State<ProfilePage> {
         title: const Text("Logout"),
         content: const Text("Apakah Anda ingin keluar?"),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Batal"),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Batal")),
           ElevatedButton(
             onPressed: () {
               Navigator.pushAndRemoveUntil(
@@ -85,17 +99,12 @@ class _ProfilePageState extends State<ProfilePage> {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8),
       elevation: 1,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       child: ListTile(
         leading: Icon(icon, color: iconColor ?? Colors.black),
         title: Text(
           title,
-          style: TextStyle(
-            color: textColor ?? Colors.black,
-            fontWeight: FontWeight.w500,
-          ),
+          style: TextStyle(color: textColor ?? Colors.black, fontWeight: FontWeight.w500),
         ),
         trailing: trailing,
         onTap: onTap,
@@ -117,16 +126,13 @@ class _ProfilePageState extends State<ProfilePage> {
           icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
           onPressed: () {
             if (widget.onBack != null) {
-              widget.onBack!(); // callback ke HomePage
+              widget.onBack!();
             } else {
               Navigator.pop(context);
             }
           },
         ),
-        title: Text(
-          "Akun",
-          style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
-        ),
+        title: Text("Akun", style: TextStyle(color: textColor, fontWeight: FontWeight.bold)),
         centerTitle: true,
       ),
       body: SafeArea(
@@ -138,43 +144,52 @@ class _ProfilePageState extends State<ProfilePage> {
                 children: [
                   CircleAvatar(
                     radius: 50,
-                    backgroundColor: isDarkMode ? Colors.grey[800] : Colors.blue,
-                    child: const Icon(Icons.person, size: 50, color: Colors.white),
+                    backgroundColor: Colors.grey[300],
+                    backgroundImage: _photoBytes != null ? MemoryImage(_photoBytes!) : null,
+                    child: _photoBytes == null
+                        ? const Icon(Icons.person, size: 50, color: Colors.white)
+                        : null,
                   ),
-                  const SizedBox(height: 16),
-                  Text(
-                    widget.username,
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: textColor,
-                    ),
-                  ),
+                  const SizedBox(height: 12),
+                  Text(widget.username,
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textColor)),
                   const SizedBox(height: 8),
-                  Text(
-                    "${widget.username}@example.com",
-                    style: TextStyle(color: isDarkMode ? Colors.grey[400] : Colors.grey),
-                  ),
+                  Text("${widget.username}@example.com",
+                      style: TextStyle(color: isDarkMode ? Colors.grey[400] : Colors.grey)),
                 ],
               ),
             ),
             const SizedBox(height: 32),
             _buildOption(
+              icon: Icons.edit,
+              title: "Edit Profil",
+              onTap: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => EditProfilePage(username: widget.username),
+                  ),
+                );
+                _loadUserImage(); // Refresh foto setelah edit
+              },
+            ),
+            _buildOption(
               icon: Icons.lock_outline,
               title: "Ubah Password",
               onTap: () {},
             ),
-            /*_buildOption(
-              icon: Icons.dark_mode_outlined,
-              title: "Dark Mode",
-              trailing: Switch.adaptive(
-                value: isDarkMode,
-                onChanged: (value) {
-                  setState(() => isDarkMode = value);
-                },
-              ),
-              onTap: () {},
-            ),*/
+            _buildOption(
+              icon: Icons.link,
+              title: "Sambungkan", // <-- Opsi baru
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ConnectionPage(username: widget.username),
+                  ),
+                );
+              },
+            ),
             _buildOption(
               icon: Icons.logout,
               title: "Logout",

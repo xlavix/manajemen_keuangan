@@ -32,7 +32,7 @@ class _MyAppState extends State<MyApp> {
       title: 'Manajemen Keuangan',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        //textTheme: GoogleFonts.poppinsTextTheme(),
+        textTheme: GoogleFonts.robotoTextTheme(),
         brightness: Brightness.light,
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),

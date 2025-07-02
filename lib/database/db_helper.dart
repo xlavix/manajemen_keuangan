@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../models/user_model.dart';
@@ -21,8 +22,9 @@ class DBHelper {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
     );
   }
 
@@ -31,7 +33,9 @@ class DBHelper {
       CREATE TABLE users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT UNIQUE,
-        password TEXT
+        password TEXT,
+        photo BLOB,
+        colorTheme TEXT
       );
     ''');
 
@@ -44,6 +48,12 @@ class DBHelper {
         date TEXT
       );
     ''');
+  }
+
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('ALTER TABLE users ADD COLUMN colorTheme TEXT');
+    }
   }
 
   Future<void> registerUser(User user) async {
@@ -77,6 +87,58 @@ class DBHelper {
     }
   }
 
+  Future<User?> getUserByUsername(String username) async {
+    final db = await database;
+    final result = await db.query(
+      'users',
+      where: 'username = ?',
+      whereArgs: [username],
+    );
+
+    if (result.isNotEmpty) {
+      return User.fromMap(result.first);
+    } else {
+      return null;
+    }
+  }
+
+  Future<void> updateUserPhoto(String username, Uint8List? photoBytes) async {
+    final db = await database;
+    await db.update(
+      'users',
+      {'photo': photoBytes},
+      where: 'username = ?',
+      whereArgs: [username],
+    );
+  }
+
+  /// Gunakan ini untuk update username dan/atau colorTheme sekaligus
+  Future<void> updateUserProfile({
+    required String oldUsername,
+    required String newUsername,
+    String? newColorTheme,
+  }) async {
+    final db = await database;
+    await db.update(
+      'users',
+      {
+        'username': newUsername,
+        'colorTheme': newColorTheme,
+      },
+      where: 'username = ?',
+      whereArgs: [oldUsername],
+    );
+  }
+
+  Future<int> deleteUserByUsername(String username) async {
+    final db = await database;
+    return await db.delete(
+      'users',
+      where: 'username = ?',
+      whereArgs: [username],
+    );
+  }
+
   Future<int> insertFinance(Map<String, dynamic> finance) async {
     final db = await database;
     return await db.insert('finance', finance);
@@ -104,15 +166,5 @@ class DBHelper {
   Future<List<Map<String, dynamic>>> getAllFinance() async {
     final db = await database;
     return await db.query('finance');
-  }
-
-  // Tambahan: Hapus akun
-  Future<int> deleteUserByUsername(String username) async {
-    final db = await database;
-    return await db.delete(
-      'users',
-      where: 'username = ?',
-      whereArgs: [username],
-    );
   }
 }

@@ -1,8 +1,7 @@
-// Final version of home_page.dart with rotation-safe layout
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_adaptive_scaffold/flutter_adaptive_scaffold.dart';
-
 import '../database/db_helper.dart';
 import 'finance_form_page.dart';
 import 'profile_page.dart';
@@ -27,11 +26,22 @@ class _HomePageState extends State<HomePage> {
   double expense = 0;
   String _selectedFilter = "all";
   int _selectedIndex = 0;
+  Uint8List? _photoBytes;
 
   @override
   void initState() {
     super.initState();
     _loadTransactions();
+    _loadUserProfile();
+  }
+
+  void _loadUserProfile() async {
+    final user = await _dbHelper.getUserByUsername(widget.username);
+    if (user != null) {
+      setState(() {
+        _photoBytes = user.photo; // asumsikan `user.photo` adalah Uint8List?
+      });
+    }
   }
 
   void _loadTransactions() async {
@@ -60,12 +70,15 @@ class _HomePageState extends State<HomePage> {
           include = true;
           break;
         case "day":
-          include = trxDate.year == now.year && trxDate.month == now.month && trxDate.day == now.day;
+          include = trxDate.year == now.year &&
+              trxDate.month == now.month &&
+              trxDate.day == now.day;
           break;
         case "week":
           final weekStart = now.subtract(Duration(days: now.weekday - 1));
           final weekEnd = weekStart.add(const Duration(days: 6));
-          include = trxDate.isAfter(weekStart.subtract(const Duration(seconds: 1))) && trxDate.isBefore(weekEnd.add(const Duration(days: 1)));
+          include = trxDate.isAfter(weekStart.subtract(const Duration(seconds: 1))) &&
+              trxDate.isBefore(weekEnd.add(const Duration(days: 1)));
           break;
         case "month":
           include = trxDate.year == now.year && trxDate.month == now.month;
@@ -116,74 +129,38 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isSmall = constraints.maxWidth < 600;
-        return Scaffold(
-          resizeToAvoidBottomInset: true,
-          body: SafeArea(
-            child: Row(
-              children: [
-                if (!isSmall)
-                  NavigationRail(
-                    selectedIndex: _selectedIndex,
-                    onDestinationSelected: (index) async {
-                      if (index == 1) {
-                        final result = await Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const FinanceFormPage()),
-                        );
-                        if (result == true) _loadTransactions();
-                      } else {
-                        setState(() => _selectedIndex = index);
-                      }
-                    },
-                    labelType: NavigationRailLabelType.selected,
-                    destinations: const [
-                      NavigationRailDestination(icon: Icon(Icons.home), label: Text('Beranda')),
-                      NavigationRailDestination(icon: Icon(Icons.add_circle), label: Text('Transaksi')),
-                      NavigationRailDestination(icon: Icon(Icons.person), label: Text('Akun')),
-                    ],
-                  ),
-                Expanded(
-                  child: IndexedStack(
-                    index: _selectedIndex,
-                    children: [
-                      _buildDashboard(),
-                      Container(),
-                      ProfilePage(
-                        username: widget.username,
-                        onBack: () => setState(() => _selectedIndex = 0),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          bottomNavigationBar: isSmall
-              ? NavigationBar(
-            selectedIndex: _selectedIndex,
-            onDestinationSelected: (index) async {
-              if (index == 1) {
-                final result = await Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const FinanceFormPage()),
-                );
-                if (result == true) _loadTransactions();
-              } else {
-                setState(() => _selectedIndex = index);
-              }
-            },
-            destinations: const [
-              NavigationDestination(icon: Icon(Icons.home), label: 'Beranda'),
-              NavigationDestination(icon: Icon(Icons.add), label: 'Transaksi'),
-              NavigationDestination(icon: Icon(Icons.person), label: 'Akun'),
-            ],
-          )
-              : null,
-        );
+    return AdaptiveScaffold(
+      selectedIndex: _selectedIndex,
+      onSelectedIndexChange: (index) async {
+        if (index == 1) {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const FinanceFormPage()),
+          );
+          if (result == true) _loadTransactions();
+        } else {
+          setState(() => _selectedIndex = index);
+        }
       },
+      destinations: const [
+        NavigationDestination(icon: Icon(Icons.home), label: 'Beranda'),
+        NavigationDestination(icon: Icon(Icons.add), label: 'Transaksi'),
+        NavigationDestination(icon: Icon(Icons.person), label: 'Akun'),
+      ],
+      body: (_) => IndexedStack(
+        index: _selectedIndex,
+        children: [
+          _buildDashboard(),
+          Container(),
+          ProfilePage(
+            username: widget.username,
+            onBack: () {
+              setState(() => _selectedIndex = 0);
+              _loadUserProfile(); // refresh foto saat kembali dari profile
+            },
+          ),
+        ],
+      ),
     );
   }
 
@@ -198,9 +175,13 @@ class _HomePageState extends State<HomePage> {
               padding: const EdgeInsets.only(left: 20, right: 20, top: 20),
               child: Row(
                 children: [
-                  const CircleAvatar(
+                  CircleAvatar(
+                    radius: 24,
                     backgroundColor: Colors.white,
-                    child: Icon(Icons.person, color: Colors.blue),
+                    backgroundImage: _photoBytes != null ? MemoryImage(_photoBytes!) : null,
+                    child: _photoBytes == null
+                        ? const Icon(Icons.person, color: Colors.blue)
+                        : null,
                   ),
                   const SizedBox(width: 12),
                   Column(
@@ -293,8 +274,7 @@ class _HomePageState extends State<HomePage> {
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             child: ListTile(
                               leading: CircleAvatar(
-                                backgroundColor:
-                                trx['type'] == 'income' ? Colors.green : Colors.red,
+                                backgroundColor: trx['type'] == 'income' ? Colors.green : Colors.red,
                                 child: Icon(
                                   trx['type'] == 'income'
                                       ? Icons.arrow_downward
