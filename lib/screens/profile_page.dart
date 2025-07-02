@@ -1,10 +1,10 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import '../database/db_helper.dart';
-import '../models/user_model.dart';
 import '../screens/login_page.dart';
 import 'edit_profile_page.dart';
-import 'connection_page.dart'; // <-- Tambahkan import ini
+import 'connection_page.dart';
+import 'change_password_page.dart'; // <-- Import file baru
 
 class ProfilePage extends StatefulWidget {
   final String username;
@@ -176,11 +176,16 @@ class _ProfilePageState extends State<ProfilePage> {
             _buildOption(
               icon: Icons.lock_outline,
               title: "Ubah Password",
-              onTap: () {},
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => ChangePasswordPage(username: widget.username)),
+                );
+              },
             ),
             _buildOption(
               icon: Icons.link,
-              title: "Sambungkan", // <-- Opsi baru
+              title: "Sambungkan",
               onTap: () {
                 Navigator.push(
                   context,
