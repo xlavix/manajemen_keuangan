@@ -4,16 +4,19 @@ import '../database/db_helper.dart';
 import '../screens/login_page.dart';
 import 'edit_profile_page.dart';
 import 'connection_page.dart';
-import 'change_password_page.dart'; // <-- Import file baru
+import 'change_password_page.dart';
 
 class ProfilePage extends StatefulWidget {
   final String username;
   final VoidCallback? onBack;
+  // Tambahkan callback untuk melapor ke HomePage
+  final Function(String newUsername)? onProfileUpdated;
 
   const ProfilePage({
     super.key,
     required this.username,
     this.onBack,
+    this.onProfileUpdated, // Tambahkan ini di constructor
   });
 
   @override
@@ -25,22 +28,70 @@ class _ProfilePageState extends State<ProfilePage> {
   Uint8List? _photoBytes;
   final DBHelper _dbHelper = DBHelper();
 
+  // 'currentUsername' untuk menampilkan di UI halaman ini
+  late String currentUsername;
+
   @override
   void initState() {
     super.initState();
+    // Inisialisasi username lokal dengan data dari widget
+    currentUsername = widget.username;
     _loadUserImage();
   }
 
-  Future<void> _loadUserImage() async {
-    final user = await _dbHelper.getUserByUsername(widget.username);
-    if (user != null && user.photo != null) {
+  // Tambahkan ini untuk update state jika widget direbuild dgn username baru
+  @override
+  void didUpdateWidget(covariant ProfilePage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.username != oldWidget.username) {
       setState(() {
-        _photoBytes = user.photo;
+        currentUsername = widget.username;
       });
+      _loadUserImage();
+    }
+  }
+
+  Future<void> _loadUserImage() async {
+    // Gunakan 'currentUsername' yang sudah terupdate
+    final user = await _dbHelper.getUserByUsername(currentUsername);
+    if (user != null && user.photo != null) {
+      if (mounted) {
+        setState(() {
+          _photoBytes = user.photo;
+        });
+      }
+    }
+  }
+
+  void _navigateToEditProfile() async {
+    // Tangkap hasil (username baru) dari EditProfilePage
+    final newUsernameResult = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => EditProfilePage(username: currentUsername),
+      ),
+    );
+
+    // Jika ada username baru yang dikembalikan (artinya user menekan simpan)
+    if (newUsernameResult is String) {
+      // 1. Laporkan username baru ke HomePage
+      if (widget.onProfileUpdated != null) {
+        widget.onProfileUpdated!(newUsernameResult);
+      }
+      // 2. Update UI di halaman ini
+      setState(() {
+        currentUsername = newUsernameResult;
+      });
+      // 3. Muat ulang gambar (mungkin saja ikut berubah)
+      _loadUserImage();
+    } else {
+      // Jika tidak ada hasil, mungkin hanya foto yang diubah
+      _loadUserImage();
     }
   }
 
   void _confirmDeleteAccount(BuildContext context) {
+    // ... (kode Anda tidak diubah) ...
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
@@ -66,6 +117,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   void _logout(BuildContext context) {
+    // ... (kode Anda tidak diubah) ...
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
@@ -96,6 +148,7 @@ class _ProfilePageState extends State<ProfilePage> {
     Widget? trailing,
     required VoidCallback onTap,
   }) {
+    // ... (kode Anda tidak diubah) ...
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8),
       elevation: 1,
@@ -151,10 +204,11 @@ class _ProfilePageState extends State<ProfilePage> {
                         : null,
                   ),
                   const SizedBox(height: 12),
-                  Text(widget.username,
+                  // Tampilkan username dari state lokal
+                  Text(currentUsername,
                       style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textColor)),
                   const SizedBox(height: 8),
-                  Text("${widget.username}@example.com",
+                  Text("${currentUsername}@example.com",
                       style: TextStyle(color: isDarkMode ? Colors.grey[400] : Colors.grey)),
                 ],
               ),
@@ -163,15 +217,7 @@ class _ProfilePageState extends State<ProfilePage> {
             _buildOption(
               icon: Icons.edit,
               title: "Edit Profil",
-              onTap: () async {
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => EditProfilePage(username: widget.username),
-                  ),
-                );
-                _loadUserImage(); // Refresh foto setelah edit
-              },
+              onTap: _navigateToEditProfile, // <-- PANGGIL FUNGSI YANG BARU
             ),
             _buildOption(
               icon: Icons.lock_outline,
@@ -179,7 +225,7 @@ class _ProfilePageState extends State<ProfilePage> {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => ChangePasswordPage(username: widget.username)),
+                  MaterialPageRoute(builder: (_) => ChangePasswordPage(username: currentUsername)),
                 );
               },
             ),
@@ -190,7 +236,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => ConnectionPage(username: widget.username),
+                    builder: (_) => ConnectionPage(username: currentUsername),
                   ),
                 );
               },

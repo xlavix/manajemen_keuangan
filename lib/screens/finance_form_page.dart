@@ -16,8 +16,13 @@ class _FinanceFormPageState extends State<FinanceFormPage> {
   final TextEditingController _descriptionController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
   String _type = 'income';
+  String? _selectedCategory; // Variabel baru untuk menyimpan kategori
 
   final DBHelper _dbHelper = DBHelper();
+
+  // Daftar kategori
+  final List<String> _incomeCategories = ['Gaji', 'Uang Ortu', 'Bonus', 'Lainnya'];
+  final List<String> _expenseCategories = ['Jajan', 'Investasi', 'Transportasi', 'Tagihan', 'Lainnya'];
 
   @override
   void initState() {
@@ -27,6 +32,7 @@ class _FinanceFormPageState extends State<FinanceFormPage> {
       _nominalController.text = widget.finance!['nominal'];
       _descriptionController.text = widget.finance!['description'];
       _selectedDate = DateTime.tryParse(widget.finance!['date'] ?? '') ?? DateTime.now();
+      _selectedCategory = widget.finance!['category']; // Muat kategori yang ada
     }
   }
 
@@ -45,9 +51,11 @@ class _FinanceFormPageState extends State<FinanceFormPage> {
   }
 
   void _saveFinance() async {
-    if (_nominalController.text.isEmpty || _descriptionController.text.isEmpty) {
+    if (_nominalController.text.isEmpty ||
+        _descriptionController.text.isEmpty ||
+        _selectedCategory == null) { // Pastikan kategori sudah dipilih
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Semua field wajib diisi')),
+        const SnackBar(content: Text('Semua field wajib diisi, termasuk kategori')),
       );
       return;
     }
@@ -57,6 +65,7 @@ class _FinanceFormPageState extends State<FinanceFormPage> {
       'nominal': _nominalController.text,
       'description': _descriptionController.text,
       'date': _selectedDate.toIso8601String().split('T').first,
+      'category': _selectedCategory, // Simpan kategori ke database
     };
 
     if (widget.finance == null) {
@@ -93,8 +102,8 @@ class _FinanceFormPageState extends State<FinanceFormPage> {
               const SizedBox(height: 12),
               ElevatedButton(
                 onPressed: () {
-                  Navigator.pop(context); // tutup dialog
-                  Navigator.pop(context, true); // kembali ke halaman sebelumnya
+                  Navigator.pop(context);
+                  Navigator.pop(context, true);
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green,
@@ -133,6 +142,8 @@ class _FinanceFormPageState extends State<FinanceFormPage> {
   Widget build(BuildContext context) {
     final isEdit = widget.finance != null;
     final dateFormatted = DateFormat('dd MMMM yyyy').format(_selectedDate);
+    // Tentukan daftar kategori berdasarkan tipe (pemasukan/pengeluaran)
+    final currentCategories = _type == 'income' ? _incomeCategories : _expenseCategories;
 
     return Scaffold(
       backgroundColor: Colors.blue.shade50,
@@ -175,7 +186,10 @@ class _FinanceFormPageState extends State<FinanceFormPage> {
                     label: const Text("Pemasukan"),
                     selected: _type == 'income',
                     selectedColor: Colors.green.shade100,
-                    onSelected: (_) => setState(() => _type = 'income'),
+                    onSelected: (_) => setState(() {
+                      _type = 'income';
+                      _selectedCategory = null; // Reset kategori saat tipe berubah
+                    }),
                     labelStyle: TextStyle(
                       color: _type == 'income' ? Colors.green[800] : Colors.black,
                     ),
@@ -185,12 +199,44 @@ class _FinanceFormPageState extends State<FinanceFormPage> {
                     label: const Text("Pengeluaran"),
                     selected: _type == 'expense',
                     selectedColor: Colors.red.shade100,
-                    onSelected: (_) => setState(() => _type = 'expense'),
+                    onSelected: (_) => setState(() {
+                      _type = 'expense';
+                      _selectedCategory = null; // Reset kategori saat tipe berubah
+                    }),
                     labelStyle: TextStyle(
                       color: _type == 'expense' ? Colors.red[800] : Colors.black,
                     ),
                   ),
                 ],
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // WIDGET BARU: Dropdown Kategori
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [BoxShadow(color: Colors.grey.shade300, blurRadius: 8)],
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  value: _selectedCategory,
+                  isExpanded: true,
+                  hint: const Text('Pilih Kategori'),
+                  items: currentCategories.map((String category) {
+                    return DropdownMenuItem<String>(
+                      value: category,
+                      child: Text(category),
+                    );
+                  }).toList(),
+                  onChanged: (newValue) {
+                    setState(() {
+                      _selectedCategory = newValue;
+                    });
+                  },
+                ),
               ),
             ),
             const SizedBox(height: 20),
