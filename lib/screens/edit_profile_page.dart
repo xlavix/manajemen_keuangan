@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import '../database/db_helper.dart';
+import 'package:uas_pbm/database/db_helper.dart'; // Sesuaikan import jika perlu
 
 class EditProfilePage extends StatefulWidget {
   final String username;
@@ -20,6 +20,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   Uint8List? _profileImageBytes;
   String _selectedColor = 'blue';
   bool isDarkMode = false;
+  late String _initialUsername;
 
   final Map<String, Color> _colorOptions = {
     'blue': Colors.blue,
@@ -32,16 +33,20 @@ class _EditProfilePageState extends State<EditProfilePage> {
   @override
   void initState() {
     super.initState();
+    _initialUsername = widget.username;
     _loadUserData();
   }
 
   Future<void> _loadUserData() async {
-    final user = await _dbHelper.getUserByUsername(widget.username);
+    final user = await _dbHelper.getUserByUsername(_initialUsername);
     if (user != null) {
-      _usernameController.text = user.username;
-      _profileImageBytes = user.photo;
-      _selectedColor = user.colorTheme ?? 'blue';
-      setState(() {});
+      if (mounted) {
+        setState(() {
+          _usernameController.text = user.username;
+          _profileImageBytes = user.photo;
+          _selectedColor = user.colorTheme ?? 'blue';
+        });
+      }
     }
   }
 
@@ -49,17 +54,21 @@ class _EditProfilePageState extends State<EditProfilePage> {
     final XFile? pickedImage = await _picker.pickImage(source: ImageSource.gallery);
     if (pickedImage == null) return;
     final bytes = await pickedImage.readAsBytes();
-    await _dbHelper.updateUserPhoto(widget.username, bytes);
-    setState(() {
-      _profileImageBytes = bytes;
-    });
+    await _dbHelper.updateUserPhoto(_initialUsername, bytes);
+    if (mounted) {
+      setState(() {
+        _profileImageBytes = bytes;
+      });
+    }
   }
 
   Future<void> _removeImage() async {
-    await _dbHelper.updateUserPhoto(widget.username, null);
-    setState(() {
-      _profileImageBytes = null;
-    });
+    await _dbHelper.updateUserPhoto(_initialUsername, null);
+    if (mounted) {
+      setState(() {
+        _profileImageBytes = null;
+      });
+    }
   }
 
   Future<void> _saveChanges() async {
@@ -73,22 +82,27 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
     try {
       await _dbHelper.updateUserProfile(
-        oldUsername: widget.username,
+        oldUsername: _initialUsername,
         newUsername: newUsername,
         newColorTheme: _selectedColor,
       );
 
       if (!mounted) return;
+      // Kirim username BARU sebagai hasil pop
       Navigator.pop(context, newUsername);
+
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Gagal menyimpan: ${e.toString()}")),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Gagal menyimpan: ${e.toString()}")),
+        );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // ... (UI Anda tidak diubah) ...
     final Color selectedColorValue = _colorOptions[_selectedColor] ?? Colors.blue;
     final backgroundColor = isDarkMode ? Colors.grey[900] : Colors.blue[50];
     final textColor = isDarkMode ? Colors.white : Colors.black;

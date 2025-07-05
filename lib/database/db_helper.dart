@@ -22,7 +22,7 @@ class DBHelper {
 
     return await openDatabase(
       path,
-      version: 2,
+      version: 3, // VERSI DATABASE NAIK MENJADI 3
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -45,7 +45,8 @@ class DBHelper {
         type TEXT,
         nominal TEXT,
         description TEXT,
-        date TEXT
+        date TEXT,
+        category TEXT 
       );
     ''');
   }
@@ -53,6 +54,10 @@ class DBHelper {
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       await db.execute('ALTER TABLE users ADD COLUMN colorTheme TEXT');
+    }
+    // MENAMBAHKAN KOLOM KATEGORI JIKA DATABASE VERSI LAMA
+    if (oldVersion < 3) {
+      await db.execute('ALTER TABLE finance ADD COLUMN category TEXT');
     }
   }
 
@@ -112,7 +117,6 @@ class DBHelper {
     );
   }
 
-  /// Gunakan ini untuk update username dan/atau colorTheme sekaligus
   Future<void> updateUserProfile({
     required String oldUsername,
     required String newUsername,
