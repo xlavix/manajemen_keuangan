@@ -16,17 +16,31 @@ class _FinanceFormPageState extends State<FinanceFormPage> {
   final TextEditingController _descriptionController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
   String _type = 'income';
+  String? _selectedCategory;
 
   final DBHelper _dbHelper = DBHelper();
+
+  final List<String> _incomeCategories = ['Gaji', 'Uang Ortu', 'Bonus', 'Lainnya'];
+  final List<String> _expenseCategories = ['Jajan', 'Investasi', 'Transportasi', 'Tagihan', 'Lainnya'];
 
   @override
   void initState() {
     super.initState();
     if (widget.finance != null) {
       _type = widget.finance!['type'];
-      _nominalController.text = widget.finance!['nominal'];
+      _nominalController.text = widget.finance!['nominal'].toString();
       _descriptionController.text = widget.finance!['description'];
       _selectedDate = DateTime.tryParse(widget.finance!['date'] ?? '') ?? DateTime.now();
+
+      // --- LOGIKA YANG DIPERBAIKI ADA DI SINI ---
+      // Cek apakah kategori yang dimuat valid untuk tipe transaksi saat ini.
+      // Ini untuk menangani transaksi lama yang belum punya kategori.
+      final loadedCategory = widget.finance!['category'];
+      final validCategories = _type == 'income' ? _incomeCategories : _expenseCategories;
+      if (loadedCategory != null && validCategories.contains(loadedCategory)) {
+        _selectedCategory = loadedCategory;
+      }
+      // Jika tidak, _selectedCategory akan tetap null, dan pengguna harus memilih.
     }
   }
 
@@ -45,9 +59,11 @@ class _FinanceFormPageState extends State<FinanceFormPage> {
   }
 
   void _saveFinance() async {
-    if (_nominalController.text.isEmpty || _descriptionController.text.isEmpty) {
+    if (_nominalController.text.isEmpty ||
+        _descriptionController.text.isEmpty ||
+        _selectedCategory == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Semua field wajib diisi')),
+        const SnackBar(content: Text('Semua field wajib diisi, termasuk kategori')),
       );
       return;
     }
@@ -57,6 +73,7 @@ class _FinanceFormPageState extends State<FinanceFormPage> {
       'nominal': _nominalController.text,
       'description': _descriptionController.text,
       'date': _selectedDate.toIso8601String().split('T').first,
+      'category': _selectedCategory,
     };
 
     if (widget.finance == null) {
@@ -84,17 +101,14 @@ class _FinanceFormPageState extends State<FinanceFormPage> {
               const SizedBox(height: 16),
               Text(
                 isEdit ? 'Transaksi berhasil diperbarui' : 'Transaksi berhasil ditambahkan',
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                ),
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),
               ElevatedButton(
                 onPressed: () {
-                  Navigator.pop(context); // tutup dialog
-                  Navigator.pop(context, true); // kembali ke halaman sebelumnya
+                  Navigator.pop(context);
+                  Navigator.pop(context, true);
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green,
@@ -133,6 +147,7 @@ class _FinanceFormPageState extends State<FinanceFormPage> {
   Widget build(BuildContext context) {
     final isEdit = widget.finance != null;
     final dateFormatted = DateFormat('dd MMMM yyyy').format(_selectedDate);
+    final currentCategories = _type == 'income' ? _incomeCategories : _expenseCategories;
 
     return Scaffold(
       backgroundColor: Colors.blue.shade50,
@@ -159,8 +174,6 @@ class _FinanceFormPageState extends State<FinanceFormPage> {
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
-
-            // Type Selector
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
               decoration: BoxDecoration(
@@ -175,27 +188,54 @@ class _FinanceFormPageState extends State<FinanceFormPage> {
                     label: const Text("Pemasukan"),
                     selected: _type == 'income',
                     selectedColor: Colors.green.shade100,
-                    onSelected: (_) => setState(() => _type = 'income'),
-                    labelStyle: TextStyle(
-                      color: _type == 'income' ? Colors.green[800] : Colors.black,
-                    ),
+                    onSelected: (_) => setState(() {
+                      _type = 'income';
+                      _selectedCategory = null;
+                    }),
+                    labelStyle: TextStyle(color: _type == 'income' ? Colors.green[800] : Colors.black),
                   ),
                   const SizedBox(width: 16),
                   ChoiceChip(
                     label: const Text("Pengeluaran"),
                     selected: _type == 'expense',
                     selectedColor: Colors.red.shade100,
-                    onSelected: (_) => setState(() => _type = 'expense'),
-                    labelStyle: TextStyle(
-                      color: _type == 'expense' ? Colors.red[800] : Colors.black,
-                    ),
+                    onSelected: (_) => setState(() {
+                      _type = 'expense';
+                      _selectedCategory = null;
+                    }),
+                    labelStyle: TextStyle(color: _type == 'expense' ? Colors.red[800] : Colors.black),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 20),
-
-            // Nominal
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [BoxShadow(color: Colors.grey.shade300, blurRadius: 8)],
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  value: _selectedCategory,
+                  isExpanded: true,
+                  hint: const Text('Pilih Kategori'),
+                  items: currentCategories.map((String category) {
+                    return DropdownMenuItem<String>(
+                      value: category,
+                      child: Text(category),
+                    );
+                  }).toList(),
+                  onChanged: (newValue) {
+                    setState(() {
+                      _selectedCategory = newValue;
+                    });
+                  },
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
             TextField(
               controller: _nominalController,
               keyboardType: TextInputType.number,
@@ -203,27 +243,16 @@ class _FinanceFormPageState extends State<FinanceFormPage> {
                 labelText: 'Nominal',
                 prefixIcon: const Padding(
                   padding: EdgeInsets.all(12.0),
-                  child: Text(
-                    'Rp',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
+                  child: Text('Rp', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 ),
                 filled: true,
                 fillColor: Colors.white,
                 border: InputBorder.none,
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide.none,
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(color: Colors.blue.shade200, width: 2),
-                ),
+                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: Colors.blue.shade200, width: 2)),
               ),
             ),
             const SizedBox(height: 20),
-
-            // Deskripsi
             TextField(
               controller: _descriptionController,
               decoration: InputDecoration(
@@ -232,19 +261,11 @@ class _FinanceFormPageState extends State<FinanceFormPage> {
                 filled: true,
                 fillColor: Colors.white,
                 border: InputBorder.none,
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide.none,
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(color: Colors.blue.shade200, width: 2),
-                ),
+                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: Colors.blue.shade200, width: 2)),
               ),
             ),
             const SizedBox(height: 20),
-
-            // Tanggal
             GestureDetector(
               onTap: _pickDate,
               child: Container(
@@ -263,10 +284,7 @@ class _FinanceFormPageState extends State<FinanceFormPage> {
                 ),
               ),
             ),
-
             const SizedBox(height: 30),
-
-            // Tombol Simpan
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
@@ -280,7 +298,6 @@ class _FinanceFormPageState extends State<FinanceFormPage> {
                 ),
               ),
             ),
-
             if (isEdit) ...[
               const SizedBox(height: 12),
               SizedBox(

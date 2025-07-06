@@ -1,19 +1,21 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import '../database/db_helper.dart';
-import '../models/user_model.dart';
 import '../screens/login_page.dart';
 import 'edit_profile_page.dart';
-import 'connection_page.dart'; // <-- Tambahkan import ini
+import 'connection_page.dart';
+import 'change_password_page.dart';
 
 class ProfilePage extends StatefulWidget {
   final String username;
   final VoidCallback? onBack;
+  final Function(String newUsername)? onProfileUpdated;
 
   const ProfilePage({
     super.key,
     required this.username,
     this.onBack,
+    this.onProfileUpdated,
   });
 
   @override
@@ -24,19 +26,47 @@ class _ProfilePageState extends State<ProfilePage> {
   bool isDarkMode = false;
   Uint8List? _photoBytes;
   final DBHelper _dbHelper = DBHelper();
+  String? _email; // <-- TAMBAHKAN VARIABEL UNTUK EMAIL
 
   @override
   void initState() {
     super.initState();
-    _loadUserImage();
+    _loadUserData();
   }
 
-  Future<void> _loadUserImage() async {
+  @override
+  void didUpdateWidget(covariant ProfilePage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.username != oldWidget.username) {
+      _loadUserData();
+    }
+  }
+
+  Future<void> _loadUserData() async {
     final user = await _dbHelper.getUserByUsername(widget.username);
-    if (user != null && user.photo != null) {
-      setState(() {
-        _photoBytes = user.photo;
-      });
+    if (user != null) {
+      if (mounted) {
+        setState(() {
+          _photoBytes = user.photo;
+          _email = user.email; // <-- AMBIL EMAIL DARI DATABASE
+        });
+      }
+    }
+  }
+
+  void _navigateToEditProfile() async {
+    final newUsernameResult = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => EditProfilePage(username: widget.username)),
+    );
+
+    if (newUsernameResult is String) {
+      if (widget.onProfileUpdated != null) {
+        widget.onProfileUpdated!(newUsernameResult);
+      }
+      _loadUserData(); // Muat ulang semua data termasuk email
+    } else {
+      _loadUserData();
     }
   }
 
@@ -53,11 +83,7 @@ class _ProfilePageState extends State<ProfilePage> {
             child: const Text("Hapus Akun"),
             onPressed: () async {
               await _dbHelper.deleteUserByUsername(widget.username);
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (_) => const LoginPage()),
-                    (route) => false,
-              );
+              Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const LoginPage()), (route) => false);
             },
           ),
         ],
@@ -74,13 +100,7 @@ class _ProfilePageState extends State<ProfilePage> {
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text("Batal")),
           ElevatedButton(
-            onPressed: () {
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (_) => const LoginPage()),
-                    (route) => false,
-              );
-            },
+            onPressed: () => Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const LoginPage()), (route) => false),
             child: const Text("Logout"),
           ),
         ],
@@ -88,24 +108,14 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildOption({
-    required IconData icon,
-    required String title,
-    Color? iconColor,
-    Color? textColor,
-    Widget? trailing,
-    required VoidCallback onTap,
-  }) {
+  Widget _buildOption({required IconData icon, required String title, Color? iconColor, Color? textColor, Widget? trailing, required VoidCallback onTap}) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8),
       elevation: 1,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       child: ListTile(
         leading: Icon(icon, color: iconColor ?? Colors.black),
-        title: Text(
-          title,
-          style: TextStyle(color: textColor ?? Colors.black, fontWeight: FontWeight.w500),
-        ),
+        title: Text(title, style: TextStyle(color: textColor ?? Colors.black, fontWeight: FontWeight.w500)),
         trailing: trailing,
         onTap: onTap,
       ),
@@ -125,11 +135,8 @@ class _ProfilePageState extends State<ProfilePage> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
           onPressed: () {
-            if (widget.onBack != null) {
-              widget.onBack!();
-            } else {
-              Navigator.pop(context);
-            }
+            if (widget.onBack != null) widget.onBack!();
+            else Navigator.pop(context);
           },
         ),
         title: Text("Akun", style: TextStyle(color: textColor, fontWeight: FontWeight.bold)),
@@ -146,64 +153,29 @@ class _ProfilePageState extends State<ProfilePage> {
                     radius: 50,
                     backgroundColor: Colors.grey[300],
                     backgroundImage: _photoBytes != null ? MemoryImage(_photoBytes!) : null,
-                    child: _photoBytes == null
-                        ? const Icon(Icons.person, size: 50, color: Colors.white)
-                        : null,
+                    child: _photoBytes == null ? const Icon(Icons.person, size: 50, color: Colors.white) : null,
                   ),
                   const SizedBox(height: 12),
-                  Text(widget.username,
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textColor)),
+                  Text(widget.username, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textColor)),
                   const SizedBox(height: 8),
-                  Text("${widget.username}@example.com",
-                      style: TextStyle(color: isDarkMode ? Colors.grey[400] : Colors.grey)),
+                  Text(_email ?? 'Tidak ada email', style: TextStyle(color: isDarkMode ? Colors.grey[400] : Colors.grey)),
                 ],
               ),
             ),
             const SizedBox(height: 32),
-            _buildOption(
-              icon: Icons.edit,
-              title: "Edit Profil",
-              onTap: () async {
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => EditProfilePage(username: widget.username),
-                  ),
-                );
-                _loadUserImage(); // Refresh foto setelah edit
-              },
-            ),
+            _buildOption(icon: Icons.edit, title: "Edit Profil", onTap: _navigateToEditProfile),
             _buildOption(
               icon: Icons.lock_outline,
               title: "Ubah Password",
-              onTap: () {},
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ChangePasswordPage(username: widget.username))),
             ),
             _buildOption(
               icon: Icons.link,
-              title: "Sambungkan", // <-- Opsi baru
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => ConnectionPage(username: widget.username),
-                  ),
-                );
-              },
+              title: "Sambungkan",
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ConnectionPage(username: widget.username))),
             ),
-            _buildOption(
-              icon: Icons.logout,
-              title: "Logout",
-              iconColor: Colors.red,
-              textColor: Colors.red,
-              onTap: () => _logout(context),
-            ),
-            _buildOption(
-              icon: Icons.delete_forever,
-              title: "Hapus Akun",
-              iconColor: Colors.red,
-              textColor: Colors.red,
-              onTap: () => _confirmDeleteAccount(context),
-            ),
+            _buildOption(icon: Icons.logout, title: "Logout", iconColor: Colors.red, textColor: Colors.red, onTap: () => _logout(context)),
+            _buildOption(icon: Icons.delete_forever, title: "Hapus Akun", iconColor: Colors.red, textColor: Colors.red, onTap: () => _confirmDeleteAccount(context)),
           ],
         ),
       ),
