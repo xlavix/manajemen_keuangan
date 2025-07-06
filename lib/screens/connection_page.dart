@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import '../database/db_helper.dart';
 
 class ConnectionPage extends StatelessWidget {
   final String username;
-
   const ConnectionPage({super.key, required this.username});
 
   @override
@@ -21,6 +21,8 @@ class ConnectionPage extends StatelessWidget {
       "Permata Bank",
       "Bank Syariah Indonesia"
     ];
+
+    final dbHelper = DBHelper(); // Tambahkan DBHelper
 
     return Scaffold(
       backgroundColor: backgroundColor,
@@ -59,7 +61,10 @@ class ConnectionPage extends StatelessWidget {
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              onTap: () => _showConnectedDialog(context, banks[index]),
+              onTap: () async {
+                await dbHelper.updateConnectedBank(username, banks[index]);
+                _showConnectedDialog(context, banks[index]);
+              },
             ),
           );
         },
@@ -78,15 +83,11 @@ class ConnectionPage extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.check_circle,
-                  color: Colors.green, size: 64),
+              const Icon(Icons.check_circle, color: Colors.green, size: 64),
               const SizedBox(height: 16),
               Text(
                 "Tersambung ke $bankName",
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                ),
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),
@@ -98,9 +99,7 @@ class ConnectionPage extends StatelessWidget {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green,
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
                 child: const Text("Selesai"),
               )

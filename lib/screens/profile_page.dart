@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import '../database/db_helper.dart';
-import '../screens/login_page.dart';
+import 'login_page.dart';
 import 'edit_profile_page.dart';
 import 'connection_page.dart';
 import 'change_password_page.dart';
@@ -26,7 +26,8 @@ class _ProfilePageState extends State<ProfilePage> {
   bool isDarkMode = false;
   Uint8List? _photoBytes;
   final DBHelper _dbHelper = DBHelper();
-  String? _email; // <-- TAMBAHKAN VARIABEL UNTUK EMAIL
+  String? _email;
+  String? _connectedBank;
 
   @override
   void initState() {
@@ -48,7 +49,8 @@ class _ProfilePageState extends State<ProfilePage> {
       if (mounted) {
         setState(() {
           _photoBytes = user.photo;
-          _email = user.email; // <-- AMBIL EMAIL DARI DATABASE
+          _email = user.email;
+          _connectedBank = user.connectedBank;
         });
       }
     }
@@ -64,10 +66,18 @@ class _ProfilePageState extends State<ProfilePage> {
       if (widget.onProfileUpdated != null) {
         widget.onProfileUpdated!(newUsernameResult);
       }
-      _loadUserData(); // Muat ulang semua data termasuk email
+      _loadUserData();
     } else {
       _loadUserData();
     }
+  }
+
+  void _navigateToConnection() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => ConnectionPage(username: widget.username)),
+    );
+    _loadUserData(); // Reload after connecting
   }
 
   void _confirmDeleteAccount(BuildContext context) {
@@ -134,10 +144,7 @@ class _ProfilePageState extends State<ProfilePage> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
-          onPressed: () {
-            if (widget.onBack != null) widget.onBack!();
-            else Navigator.pop(context);
-          },
+          onPressed: () => widget.onBack != null ? widget.onBack!() : Navigator.pop(context),
         ),
         title: Text("Akun", style: TextStyle(color: textColor, fontWeight: FontWeight.bold)),
         centerTitle: true,
@@ -159,21 +166,15 @@ class _ProfilePageState extends State<ProfilePage> {
                   Text(widget.username, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textColor)),
                   const SizedBox(height: 8),
                   Text(_email ?? 'Tidak ada email', style: TextStyle(color: isDarkMode ? Colors.grey[400] : Colors.grey)),
+                  const SizedBox(height: 8),
+                  Text(_connectedBank != null ? "Bank: $_connectedBank" : "Belum tersambung ke bank", style: TextStyle(color: isDarkMode ? Colors.grey[400] : Colors.grey)),
                 ],
               ),
             ),
             const SizedBox(height: 32),
             _buildOption(icon: Icons.edit, title: "Edit Profil", onTap: _navigateToEditProfile),
-            _buildOption(
-              icon: Icons.lock_outline,
-              title: "Ubah Password",
-              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ChangePasswordPage(username: widget.username))),
-            ),
-            _buildOption(
-              icon: Icons.link,
-              title: "Sambungkan",
-              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ConnectionPage(username: widget.username))),
-            ),
+            _buildOption(icon: Icons.lock_outline, title: "Ubah Password", onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ChangePasswordPage(username: widget.username)))),
+            _buildOption(icon: Icons.link, title: "Sambungkan", onTap: _navigateToConnection),
             _buildOption(icon: Icons.logout, title: "Logout", iconColor: Colors.red, textColor: Colors.red, onTap: () => _logout(context)),
             _buildOption(icon: Icons.delete_forever, title: "Hapus Akun", iconColor: Colors.red, textColor: Colors.red, onTap: () => _confirmDeleteAccount(context)),
           ],
