@@ -96,12 +96,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
         leading: IconButton(icon: const Icon(Icons.arrow_back_ios_new), onPressed: () => Navigator.pop(context)),
         title: Text("Edit Profil", style: TextStyle(color: textColor, fontWeight: FontWeight.bold)),
         centerTitle: true,
-        actions: [
-          IconButton(
-            icon: Icon(isDarkMode ? Icons.dark_mode : Icons.light_mode, color: textColor),
-            onPressed: () => setState(() => isDarkMode = !isDarkMode),
-          ),
-        ],
       ),
       body: ListView(
         padding: const EdgeInsets.all(24),
@@ -163,20 +157,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
             ),
           ),
           const SizedBox(height: 24),
-          Text("Pilih Tema Warna", style: TextStyle(fontWeight: FontWeight.bold, color: textColor)),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 10,
-            children: _colorOptions.entries.map((entry) {
-              return ChoiceChip(
-                label: Text(entry.key, style: const TextStyle(color: Colors.white)),
-                selected: _selectedColor == entry.key,
-                selectedColor: entry.value,
-                backgroundColor: entry.value.withOpacity(0.5),
-                onSelected: (_) => setState(() => _selectedColor = entry.key),
-              );
-            }).toList(),
-          ),
           const SizedBox(height: 32),
           ElevatedButton(
             onPressed: _saveChanges,

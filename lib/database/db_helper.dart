@@ -22,7 +22,7 @@ class DBHelper {
 
     return await openDatabase(
       path,
-      version: 4, // <-- UBAH MENJADI 4
+      version: 5,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -34,9 +34,10 @@ class DBHelper {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT UNIQUE,
         password TEXT,
-        email TEXT, -- <-- TAMBAHKAN KOLOM INI
+        email TEXT,
         photo BLOB,
-        colorTheme TEXT
+        colorTheme TEXT,
+        connectedBank TEXT
       );
     ''');
 
@@ -53,24 +54,16 @@ class DBHelper {
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    if (oldVersion < 2) {
-      await db.execute('ALTER TABLE users ADD COLUMN colorTheme TEXT');
-    }
-    if (oldVersion < 3) {
-      await db.execute('ALTER TABLE finance ADD COLUMN category TEXT');
-    }
-    // TAMBAHKAN BLOK IF INI
-    if (oldVersion < 4) {
-      await db.execute('ALTER TABLE users ADD COLUMN email TEXT');
-    }
+    if (oldVersion < 2) await db.execute('ALTER TABLE users ADD COLUMN colorTheme TEXT');
+    if (oldVersion < 3) await db.execute('ALTER TABLE finance ADD COLUMN category TEXT');
+    if (oldVersion < 4) await db.execute('ALTER TABLE users ADD COLUMN email TEXT');
+    if (oldVersion < 5) await db.execute('ALTER TABLE users ADD COLUMN connectedBank TEXT');
   }
 
   Future<void> registerUser(User user) async {
     final db = await database;
     final existing = await db.query('users', where: 'username = ?', whereArgs: [user.username]);
-    if (existing.isNotEmpty) {
-      throw Exception("Username already exists");
-    }
+    if (existing.isNotEmpty) throw Exception("Username already exists");
     await db.insert('users', user.toMap());
   }
 
@@ -91,23 +84,34 @@ class DBHelper {
     await db.update('users', {'photo': photoBytes}, where: 'username = ?', whereArgs: [username]);
   }
 
-  // UBAH FUNGSI INI
   Future<void> updateUserProfile({
     required String oldUsername,
     required String newUsername,
     String? newEmail,
     String? newColorTheme,
+    String? newConnectedBank,
   }) async {
     final db = await database;
     await db.update(
       'users',
       {
         'username': newUsername,
-        'email': newEmail, // <-- TAMBAHKAN EMAIL
+        'email': newEmail,
         'colorTheme': newColorTheme,
+        'connectedBank': newConnectedBank,
       },
       where: 'username = ?',
       whereArgs: [oldUsername],
+    );
+  }
+
+  Future<void> updateConnectedBank(String username, String connectedBank) async {
+    final db = await database;
+    await db.update(
+      'users',
+      {'connectedBank': connectedBank},
+      where: 'username = ?',
+      whereArgs: [username],
     );
   }
 
