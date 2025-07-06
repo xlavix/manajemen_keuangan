@@ -4,7 +4,6 @@ class User {
   final int? id;
   final String username;
   final String password;
-  final String? email; // <-- TAMBAHKAN INI
   final Uint8List? photo;
   final String? colorTheme;
 
@@ -12,7 +11,6 @@ class User {
     this.id,
     required this.username,
     required this.password,
-    this.email, // <-- TAMBAHKAN INI
     this.photo,
     this.colorTheme,
   });
@@ -22,7 +20,6 @@ class User {
       'id': id,
       'username': username,
       'password': password,
-      'email': email, // <-- TAMBAHKAN INI
       'photo': photo,
       'colorTheme': colorTheme,
     };
@@ -33,7 +30,6 @@ class User {
       id: map['id'],
       username: map['username'],
       password: map['password'],
-      email: map['email'], // <-- TAMBAHKAN INI
       photo: map['photo'],
       colorTheme: map['colorTheme'],
     );

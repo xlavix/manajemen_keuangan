@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_adaptive_scaffold/flutter_adaptive_scaffold.dart';
 import '../database/db_helper.dart';
-import '../services/weather_service.dart';
 import 'finance_form_page.dart';
 import 'profile_page.dart';
 import 'notifications_page.dart';
@@ -20,7 +19,6 @@ class _HomePageState extends State<HomePage> {
   final _currencyFormatter = NumberFormat('#,##0', 'id_ID');
   final DBHelper _dbHelper = DBHelper();
 
-  late String currentUsername;
   List<Map<String, dynamic>> allTransactions = [];
   List<Map<String, dynamic>> filteredTransactions = [];
   double totalBalance = 0;
@@ -30,64 +28,27 @@ class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
   Uint8List? _photoBytes;
 
-  final WeatherService _weatherService = WeatherService();
-  String _weatherInfo = "Memuat cuaca...";
-
   @override
   void initState() {
     super.initState();
-    currentUsername = widget.username;
     _loadTransactions();
     _loadUserProfile();
-    _loadWeather();
-  }
-
-  void _loadWeather() async {
-    try {
-      final weatherData = await _weatherService.getWeather();
-      if (mounted) {
-        final String city = weatherData['city'];
-        final int temp = weatherData['temp'];
-        final String description = weatherData['description'];
-
-        setState(() {
-          _weatherInfo = "$city, $temp°C - $description";
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _weatherInfo = "Cuaca tidak tersedia";
-        });
-      }
-    }
   }
 
   void _loadUserProfile() async {
-    final user = await _dbHelper.getUserByUsername(currentUsername);
+    final user = await _dbHelper.getUserByUsername(widget.username);
     if (user != null) {
-      if (mounted) {
-        setState(() {
-          _photoBytes = user.photo;
-        });
-      }
+      setState(() {
+        _photoBytes = user.photo; // asumsikan `user.photo` adalah Uint8List?
+      });
     }
-  }
-
-  void _updateUsername(String newUsername) {
-    setState(() {
-      currentUsername = newUsername;
-    });
-    _loadUserProfile();
   }
 
   void _loadTransactions() async {
     final data = await _dbHelper.getAllFinance();
-    if (mounted) {
-      setState(() {
-        allTransactions = data;
-      });
-    }
+    setState(() {
+      allTransactions = data;
+    });
     _applyFilter();
   }
 
@@ -98,31 +59,38 @@ class _HomePageState extends State<HomePage> {
     for (var trx in allTransactions) {
       final date = trx['date'];
       if (date == null) continue;
+
       final trxDate = DateTime.tryParse(date);
       if (trxDate == null) continue;
 
       bool include = false;
+
       switch (_selectedFilter) {
         case "all":
           include = true;
           break;
         case "day":
-          include = trxDate.year == now.year && trxDate.month == now.month && trxDate.day == now.day;
+          include = trxDate.year == now.year &&
+              trxDate.month == now.month &&
+              trxDate.day == now.day;
           break;
         case "week":
           final weekStart = now.subtract(Duration(days: now.weekday - 1));
           final weekEnd = weekStart.add(const Duration(days: 6));
-          include = trxDate.isAfter(weekStart.subtract(const Duration(seconds: 1))) && trxDate.isBefore(weekEnd.add(const Duration(days: 1)));
+          include = trxDate.isAfter(weekStart.subtract(const Duration(seconds: 1))) &&
+              trxDate.isBefore(weekEnd.add(const Duration(days: 1)));
           break;
         case "month":
           include = trxDate.year == now.year && trxDate.month == now.month;
           break;
       }
+
       if (include) filtered.add(trx);
     }
 
     double pemasukan = 0;
     double pengeluaran = 0;
+
     for (var trx in filtered) {
       final nominal = double.tryParse(trx['nominal']) ?? 0;
       if (trx['type'] == 'income') {
@@ -132,14 +100,12 @@ class _HomePageState extends State<HomePage> {
       }
     }
 
-    if (mounted) {
-      setState(() {
-        filteredTransactions = filtered;
-        income = pemasukan;
-        expense = pengeluaran;
-        totalBalance = pemasukan - pengeluaran;
-      });
-    }
+    setState(() {
+      filteredTransactions = filtered;
+      income = pemasukan;
+      expense = pengeluaran;
+      totalBalance = pemasukan - pengeluaran;
+    });
   }
 
   void _confirmDelete(int id) async {
@@ -187,11 +153,10 @@ class _HomePageState extends State<HomePage> {
           _buildDashboard(),
           Container(),
           ProfilePage(
-            username: currentUsername,
-            onProfileUpdated: _updateUsername,
+            username: widget.username,
             onBack: () {
               setState(() => _selectedIndex = 0);
-              _loadUserProfile();
+              _loadUserProfile(); // refresh foto saat kembali dari profile
             },
           ),
         ],
@@ -219,29 +184,15 @@ class _HomePageState extends State<HomePage> {
                         : null,
                   ),
                   const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text("Halo, Selamat siang!",
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                        Row(
-                          children: [
-                            Text(currentUsername, style: const TextStyle(fontSize: 14)),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                _weatherInfo,
-                                style: TextStyle(fontSize: 12, color: Colors.grey[700]),
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 1,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text("Halo, Selamat siang!",
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      Text(widget.username, style: const TextStyle(fontSize: 14)),
+                    ],
                   ),
+                  const Spacer(),
                   IconButton(
                     icon: const Icon(Icons.notifications_none),
                     onPressed: () => Navigator.push(
