@@ -68,10 +68,10 @@ Aplikasi Manajemen Keuangan adalah aplikasi berbasis Flutter yang dirancang untu
 
 - **Autentikasi Pengguna**: Fitur login dan register agar data transaksi tersimpan per pengguna.
 - **Dashboard Beranda**: Menampilkan ringkasan saldo, total pemasukan, dan total pengeluaran.
-- **Tambah Transaksi**: Memungkinkan pengguna menambahkan transaksi pemasukan atau pengeluaran dengan detail nominal dan deskripsi.
+- **Tambah Transaksi**: Memungkinkan pengguna menambahkan transaksi pemasukan atau pengeluaran dengan detail nominal, kategori dan deskripsi.
 - **Daftar Transaksi Terbaru**: Mempermudah memantau riwayat transaksi.
-- **Mode Gelap (Dark Mode)**: Pengguna dapat beralih ke tema gelap sesuai preferensi.
-- **Manajemen Akun**: Fitur ubah password, logout, dan hapus akun.
+- **Manajemen Akun**: Fitur ubah foto profil, password, username, email, logout, dan hapus akun.
+- **API Cuaca**: Memunculkan Cuaca di lokasi device berada.
 
 ---
 
@@ -83,7 +83,9 @@ lib/
 ├── models/
 │   └── user_model.dart
 ├── screens/
-│   ├── add_transaction_screen.dart
+│   ├── change_password_page.dart
+│   ├── connection_page.dart
+│   ├── edit_profile_page.dart
 │   ├── finance_form_page.dart
 │   ├── homepage.dart
 │   ├── login_page.dart
@@ -107,7 +109,7 @@ Mendefinisikan tampilan dan fungsi registrasi akun baru.
 * `home_page.dart`
 Menampilkan ringkasan saldo, pemasukan, pengeluaran, dan daftar transaksi terakhir.
 
-* `add_transaction_page.dart`
+* `finance_form_page.dart`
 Mendefinisikan halaman untuk menambah transaksi baru (pemasukan atau pengeluaran).
 
 * `account_page.dart`
@@ -116,8 +118,14 @@ Mendefinisikan halaman profil pengguna, termasuk fitur ubah password, logout, ha
 * `notification_page.dart`
 Menampilkan daftar notifikasi yang diterima oleh pengguna.
 
-* `transaction_model.dart`
-Berisi model data transaksi yang digunakan dalam aplikasi.
+*`change_password_page.dart`
+Mendefinisikan halaman untuk mengubah password akun.
+
+*`profile_page.dart`
+Menampilkan halaman informasi akun pengguna.
+
+*`edit_profile_page`
+Mendefinisikan halam untuk pengguna agar dapat mengubah informasi akun.
 
 ---
 
